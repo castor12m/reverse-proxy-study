@@ -1,0 +1,56 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "7000:7000"  # 추가: NGINX가 7000 포트를 관리하도록 함
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mock-api
+
+  mock-api:
+    image: stoplight/prism:latest
+    container_name: mock-api
+    restart: unless-stopped
+    volumes:
+      - ./mock-api/api.yaml:/api.yaml
+    # expose:
+    #   - "8192"
+    command: ["mock", "/api.yaml", "-h", "0.0.0.0", "-p", "8192"]
+  
+  zmqproxy:
+    image: naraspace/zmqproxy:1.0
+    container_name: zmqproxy
+    restart: always
+    privileged: true
+    user: root
+    environment:
+      - AUTO_START=${AUTO_START_ZMQPROXY:-1}
+    # ports:
+    #   - "${ZMQPROXY_6000_BIND_PORT:-6000}:6000"
+    #   - "${ZMQPROXY_7000_BIND_PORT:-7000}:7000"
+    expose:
+      - "6000"
+      - "7000"
+    volumes:
+      - libcsp_output_volume:/src/libcsp/output
+      - libcsp_include_volume:/src/libcsp/share_include
+      - libcsp_old_output_volume:/src/libcspOld/output
+      - libcsp_old_include_volume:/src/libcspOld/share_include
+
+volumes:
+  libcsp_output_volume:
+    external: false
+    name: "libcsp_output_volume"
+  libcsp_include_volume:
+    external: false
+    name: "libcsp_include_volume"
+  libcsp_old_output_volume:
+    external: false
+    name: "libcsp_old_output_volume"
+  libcsp_old_include_volume:
+    external: false
+    name: "libcsp_old_include_volume"

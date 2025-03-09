@@ -1,0 +1,11 @@
+http:
+  routers:
+    mock-api:
+      rule: "Host(`api.local`)"
+      service: "mock-api"
+
+  services:
+    mock-api:
+      loadBalancer:
+        servers:
+          - url: "http://mock-api:8192"

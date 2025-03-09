@@ -1,0 +1,45 @@
+services:
+  reverse-proxy:
+    image: "traefik:v2.10"
+    container_name: "traefik"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8000:80"     # Traefik 대시보드 접근
+      - "8080:8080"   # Traefik API Dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+
+  mock-api:
+    image: stoplight/prism:latest
+    container_name: mock-api
+    restart: unless-stopped
+    volumes:
+      - ./mock-api/api.yaml:/api.yaml
+    # ports:
+    #   - "8192:8192"  # NPM이 접근 가능하도록 내부에서 공개
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mock-api.rule=Host(`api.local`)"
+      - "traefik.http.services.mock-api.loadbalancer.server.port=8191"
+    command: ["mock", "/api.yaml", "-h", "0.0.0.0", "-p", "8192"]
+    networks:
+      - proxy-net
+
+  traefik-ip-limiter:
+    image: "traefik:v2.10"
+    container_name: "traefik-ip-limiter"
+    command:
+      - "--entrypoints.web.address=:8001"
+      - "--providers.file.filename=/dynamic_conf.yml"
+    volumes:
+      - "./dynamic_conf.yml:/dynamic_conf.yml"
+    ports:
+      - "8001:8001"
+
+networks:
+  proxy-net:
+    driver: bridge

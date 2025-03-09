@@ -1,0 +1,12 @@
+http:
+  routers:
+    mock-api:
+      rule: "Host(`api.local`)"
+      entryPoints: "web"  # EntryPoint 추가
+      service: "mock-api"
+
+  services:
+    mock-api:
+      loadBalancer:
+        servers:
+          - url: "http://mock-api:8192"

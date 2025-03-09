@@ -1,0 +1,21 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mock-api
+
+  mock-api:
+    image: stoplight/prism:latest
+    container_name: mock-api
+    restart: unless-stopped
+    volumes:
+      - ./mock-api/api.yaml:/api.yaml
+    # expose:
+    #   - "8192"
+    command: ["mock", "/api.yaml", "-h", "0.0.0.0", "-p", "8192"]

@@ -1,0 +1,32 @@
+services:
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: 'nginx-proxy-manager'
+    restart: unless-stopped
+    ports:
+      - '80:80'    # HTTP
+      - '81:81'    # 관리 페이지
+      - '443:443'  # HTTPS
+    volumes:
+      - './data:/data'
+      - './letsencrypt:/etc/letsencrypt'
+    networks:
+      - proxy-net
+
+  mock-api:
+    image: stoplight/prism:latest
+    container_name: mock-api
+    restart: unless-stopped
+    volumes:
+      - ./mock-api/api.yaml:/api.yaml
+    # ports:
+    #   - "8192:8192"  # NPM이 접근 가능하도록 내부에서 공개
+    expose:
+      - "8192"
+    command: ["mock", "/api.yaml", "-h", "0.0.0.0", "-p", "8192"]
+    networks:
+      - proxy-net
+
+networks:
+  proxy-net:
+    driver: bridge

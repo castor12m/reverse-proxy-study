@@ -1,0 +1,19 @@
+http:
+  middlewares:
+    ip-whitelist:
+      ipWhiteList:
+        sourceRange:
+          - "192.168.1.100/32"  # 허용할 IP (예시)
+
+  routers:
+    mock-api:
+      rule: "Host(`api.local`)"
+      service: "mock-api"
+      middlewares:
+        - "ip-whitelist"
+
+  services:
+    mock-api:
+      loadBalancer:
+        servers:
+          - url: "http://mock-api:8192"
